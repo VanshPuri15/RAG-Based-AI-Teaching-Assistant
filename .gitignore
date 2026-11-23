@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+venv/
+env/
+.env
+.vscode/
+audios/
+videos/
+unused/
+*.pkl
+*.pt
+*.bin
+*.gguf
