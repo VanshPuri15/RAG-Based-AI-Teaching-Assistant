@@ -1,4 +1,3 @@
-
 import requests
 import os
 import json
@@ -21,12 +20,16 @@ def create_embedding(text_list):
     return embedding
 
 
-jsons = os.listdir("jsons")
+# Read JSON files from newjsons instead of jsons
+jsons = os.listdir("newjsons")
 my_dicts = []
 chunk_id = 0
 
 for json_file in jsons:
-    with open(f"jsons/{json_file}") as f:
+    if not json_file.endswith(".json"):
+        continue
+
+    with open(f"newjsons/{json_file}", encoding="utf-8") as f:
         content = json.load(f)
 
     print(f"Creating embeddings for {json_file}")
@@ -57,6 +60,8 @@ for json_file in jsons:
 
 
 df = pd.DataFrame.from_records(my_dicts)
-#Save this df
-joblib.dump(df,"embeddings.joblib")
 
+# Save the dataframe
+joblib.dump(df, "embeddings.joblib")
+
+print("All embeddings generated and saved successfully!")

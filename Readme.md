@@ -2,16 +2,17 @@
 
 A Retrieval-Augmented Generation (RAG) based AI Teaching Assistant that allows users to ask questions about educational video content and receive context-aware answers with relevant video references and timestamps.
 
-The project uses **BGE-M3** to generate text embeddings, **Cosine Similarity** for semantic search, and **Llama 3.2** to generate natural-language responses using the retrieved video transcripts.
+The project uses **BGE-M3** for generating text embeddings, **Cosine Similarity** for semantic retrieval, and **Llama 3.2** for generating natural-language responses using the retrieved video content.
 
 ## Features
 
-- Converts educational videos into audio files.
-- Transcribes audio into structured JSON data.
+- Converts educational videos into MP3 audio files.
+- Transcribes audio into structured JSON files with timestamps.
+- Combines smaller transcript chunks into larger, context-rich chunks.
 - Generates semantic embeddings using Ollama's BGE-M3 model.
-- Retrieves the most relevant video transcript chunks using cosine similarity.
+- Retrieves the most relevant transcript chunks using cosine similarity.
 - Generates context-aware answers using Llama 3.2.
-- Provides relevant video titles and timestamps to help users locate the content.
+- Provides relevant video titles and timestamps to help users locate specific topics.
 
 ## Tech Stack
 
@@ -29,15 +30,30 @@ The project uses **BGE-M3** to generate text embeddings, **Cosine Similarity** f
 
 ## Project Workflow
 
-The project follows a five-step RAG pipeline:
+The project follows a five-stage RAG pipeline:
 
 1. **Video Collection:** Collect educational videos and store them in the `videos` folder.
-2. **Audio Extraction:** Convert video files into MP3 audio files.
-3. **Transcription:** Convert audio files into structured JSON transcripts containing text and timestamps.
-4. **Embedding Generation:** Process JSON files, generate embeddings using BGE-M3, and save the resulting dataframe as a Joblib pickle file.
-5. **Retrieval & Response Generation:** Convert the user's query into an embedding, retrieve the most relevant transcript chunks using cosine similarity, and pass the retrieved context to Llama 3.2 to generate an answer.
 
-## How to Use This Project with Your Own Data
+2. **Audio Extraction:** Use `video_to_mp3.py` to extract audio from video files and convert them into MP3 format.
+
+3. **Transcription:** Use `mp3_to_json.py` to transcribe audio files into structured JSON files containing transcript text and timestamps.
+
+4. **Chunk Processing and Embedding Generation:**
+   - Process the original JSON files and combine every 5 consecutive transcript chunks into a larger chunk.
+   - Save the processed files in the `newjsons` folder.
+   - Generate embeddings for the processed chunks using BGE-M3.
+   - Store the text, video metadata, timestamps, and embeddings in a Pandas DataFrame.
+   - Save the dataframe as `embeddings.joblib` using Joblib.
+
+5. **Retrieval and Response Generation:**
+   - Load the saved embeddings dataframe.
+   - Convert the user's query into an embedding.
+   - Retrieve the top 5 most relevant chunks using cosine similarity.
+   - Construct a context-aware prompt using the retrieved transcript content.
+   - Send the prompt to Llama 3.2.
+   - Generate an answer with relevant video references and timestamps.
+
+## How to Use the Project with Your Own Data
 
 ### Prerequisites
 
@@ -48,51 +64,63 @@ The project follows a five-step RAG pipeline:
 
 ### Step 1: Collect Your Videos
 
-Move all your educational video files into the `videos` folder.
+Move your educational video files into the `videos` folder.
 
 ### Step 2: Convert Videos to MP3
 
-Run the `video_to_mp3` script to extract audio from all video files and convert them into MP3 format.
+Run the `video_to_mp3.py` script to extract audio from your video files.
 
 ### Step 3: Convert MP3 Files to JSON
 
-Run the `mp3_to_json` script to transcribe the audio files and generate JSON files containing the extracted text and timestamps.
+Run the `mp3_to_json.py` script to transcribe the audio and generate JSON files containing the extracted text and timestamps.
 
-### Step 4: Generate Embeddings
+### Step 4: Process Transcript Chunks
 
-Run the `preprocess_json` script to:
+Run the chunk-processing script to:
 
-- Read and process the generated JSON files.
-- Convert transcript text into embeddings using BGE-M3.
-- Store the video metadata, timestamps, text, and embeddings in a Pandas DataFrame.
-- Save the processed data as a Joblib pickle file.
+- Read the JSON files from the `jsons` folder.
+- Combine every 5 consecutive transcript chunks into one larger chunk.
+- Preserve the video number, title, starting timestamp, and ending timestamp.
+- Save the processed JSON files in the `newjsons` folder.
 
-### Step 5: Ask Questions Using the RAG Assistant
+### Step 5: Generate Embeddings
 
-Run the `process_incoming.py` script.
+Run the `preprocess_json.py` script to:
+
+- Read the processed JSON files from `newjsons`.
+- Generate embeddings using BGE-M3.
+- Process the transcript chunks in batches.
+- Store embeddings and associated metadata in a Pandas DataFrame.
+- Save the dataframe as `embeddings.joblib`.
+
+### Step 6: Ask Questions Using the RAG Assistant
+
+Run `process_incoming.py`.
 
 The system will:
 
-- Load the saved embeddings dataframe.
+- Load `embeddings.joblib`.
 - Accept a question from the user.
 - Generate an embedding for the question.
-- Retrieve the top 5 most relevant transcript chunks using cosine similarity.
-- Construct a context-aware prompt using the retrieved information.
-- Send the prompt to Llama 3.2.
-- Display the generated answer with relevant video references and timestamps.
+- Retrieve the top 5 matching transcript chunks.
+- Construct a prompt using the retrieved context.
+- Generate a response using Llama 3.2.
+- Display the answer with relevant video references and timestamps.
 
 ## Ollama Model Setup
 
-Make sure Ollama is installed and running. Pull the required models using:
+Install Ollama and download the required models:
 
 ```bash
 ollama pull bge-m3
 ollama pull llama3.2
 ```
 
+Make sure the Ollama service is running before executing the scripts.
+
 ## Running the Project
 
-After completing the data preparation steps and generating the embeddings file, run:
+After completing the preprocessing steps and generating `embeddings.joblib`, run:
 
 ```bash
 python process_incoming.py
@@ -103,7 +131,7 @@ Enter your question when prompted and receive an AI-generated answer based on yo
 ## Future Improvements
 
 - Build a web-based interface for easier interaction.
-- Add direct video playback from the recommended timestamps.
+- Add direct video playback from recommended timestamps.
 - Improve retrieval accuracy through better chunking and ranking strategies.
 - Support additional document formats such as PDFs and text files.
 - Implement conversation history for follow-up questions.
