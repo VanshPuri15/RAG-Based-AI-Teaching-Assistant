@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+{% block title %}AI Teaching Assistant — {{ course_name }}{% endblock %}
+
+{% block content %}
+<!-- ─── NAVBAR ─────────────────────────────────────────────────── -->
+<nav class="navbar navbar-expand-lg navbar-dark nav-gradient sticky-top">
+  <div class="container">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+      <div class="brand-icon"><i class="bi bi-mortarboard-fill"></i></div>
+      <span class="fw-700">LearnAI</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto align-items-center gap-2">
+        <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
+        <li class="nav-item"><a class="nav-link" href="#how-it-works">How it works</a></li>
+        <li class="nav-item">
+          <a class="btn btn-primary-custom btn-sm px-4" href="/dashboard">
+            <i class="bi bi-play-circle-fill me-1"></i>Start Learning
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- ─── HERO ───────────────────────────────────────────────────── -->
+<section class="hero-section">
+  <div class="container">
+    <div class="row align-items-center min-vh-85 py-5">
+      <div class="col-lg-6 hero-text">
+        <div class="badge-pill mb-4">
+          <i class="bi bi-stars me-1"></i> AI-Powered EdTech · Sigma Web Dev
+        </div>
+        <h1 class="display-4 fw-700 mb-4">
+          Learn smarter.<br>
+          Find answers faster.<br>
+          <span class="text-accent">Master every concept.</span>
+        </h1>
+        <p class="lead text-muted mb-5">
+          Your personal AI teaching assistant that understands the actual course content —
+          not just generic answers. Ask anything, discover exactly which video explains it,
+          and jump straight to the right timestamp.
+        </p>
+        <div class="d-flex flex-wrap gap-3">
+          <a href="/dashboard" class="btn btn-primary-custom btn-lg px-5">
+            <i class="bi bi-play-circle-fill me-2"></i>Start Learning
+          </a>
+          <a href="#how-it-works" class="btn btn-outline-custom btn-lg px-5">
+            <i class="bi bi-info-circle me-2"></i>How it works
+          </a>
+        </div>
+
+        <!-- stats strip -->
+        <div class="stats-strip mt-5">
+          <div class="stat-item">
+            <span class="stat-num">{{ videos_count }}</span>
+            <span class="stat-label">Videos indexed</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-num">{{ "{:,}".format(total_chunks) }}</span>
+            <span class="stat-label">Transcript chunks</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-num">{{ embed_model | upper }}</span>
+            <span class="stat-label">Semantic search</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- hero card preview -->
+      <div class="col-lg-6 d-none d-lg-flex justify-content-center">
+        <div class="hero-card-wrapper">
+          <div class="hero-chat-card">
+            <div class="hcc-header">
+              <div class="hcc-dot red"></div><div class="hcc-dot yellow"></div><div class="hcc-dot green"></div>
+              <span class="ms-3 small text-muted">AI Teaching Assistant</span>
+            </div>
+            <div class="hcc-body">
+              <div class="hcc-msg user">What are CSS selectors?</div>
+              <div class="hcc-msg ai">
+                CSS selectors target HTML elements for styling. The course covers class selectors
+                (<code>.class</code>), ID selectors (<code>#id</code>), and combinators in
+                <strong>Video 17 — CSS Selectors MasterClass</strong> starting at
+                <span class="ts-badge">02:15</span>.
+              </div>
+              <div class="hcc-source-pill">
+                <i class="bi bi-play-circle-fill"></i>
+                Video 17 · CSS Selectors MasterClass · 02:15 – 08:40
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FEATURES ───────────────────────────────────────────────── -->
+<section id="features" class="section-alt py-6">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="fw-700 mb-2">Everything a great tutor provides</h2>
+      <p class="text-muted">Grounded in real course content. No hallucinations. No generic answers.</p>
+    </div>
+    <div class="row g-4">
+      {% for feat in [
+        ("bi-chat-dots-fill","Course Q&A","Ask any question about the Sigma Web Dev course and get an answer grounded in actual video transcripts with exact timestamps.", "accent-blue"),
+        ("bi-pin-map-fill","Video Timestamps","Every answer includes the exact video and timestamp so you can jump straight to where the concept is taught.", "accent-green"),
+        ("bi-patch-question-fill","AI Quiz Generator","Generate multiple-choice quizzes on any course topic. Get scored and see explanations grounded in the course material.", "accent-purple"),
+        ("bi-lightbulb-fill","Simplify Concepts","Request ELI5 explanations, step-by-step breakdowns, practical examples, or concise summaries of any concept.", "accent-orange"),
+        ("bi-clock-history","Learning History","Your conversation history is preserved during the session so you can ask follow-up questions naturally.", "accent-teal"),
+        ("bi-shield-check-fill","Honest AI","If the course doesn't cover something, the assistant says so rather than making things up.", "accent-red"),
+      ] %}
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card h-100">
+          <div class="feature-icon-wrap {{ feat[3] }}">
+            <i class="bi {{ feat[0] }}"></i>
+          </div>
+          <h5 class="fw-600 mt-3 mb-2">{{ feat[1] }}</h5>
+          <p class="text-muted small mb-0">{{ feat[2] }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ─── HOW IT WORKS ───────────────────────────────────────────── -->
+<section id="how-it-works" class="py-6">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="fw-700 mb-2">How the RAG pipeline works</h2>
+      <p class="text-muted">Retrieval-Augmented Generation — your question, real course knowledge, grounded answers.</p>
+    </div>
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <div class="pipeline-steps">
+          {% for step in [
+            ("1","bi-keyboard","You ask a question","Your question is received by the AI assistant."),
+            ("2","bi-vector-pen","Semantic embedding","BGE-M3 converts your question into a 1024-dimension vector."),
+            ("3","bi-search","Retrieval","Cosine similarity finds the top 5 most relevant video transcript chunks."),
+            ("4","bi-cpu","LLM generation","Llama 3.2 reads the retrieved chunks and generates a grounded answer."),
+            ("5","bi-card-checklist","Answer + sources","You receive the answer plus exact video title and timestamp references."),
+          ] %}
+          <div class="pipeline-step">
+            <div class="step-num">{{ step[0] }}</div>
+            <div class="step-icon"><i class="bi {{ step[1] }}"></i></div>
+            <div class="step-text">
+              <div class="step-title">{{ step[2] }}</div>
+              <div class="step-desc">{{ step[3] }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── COURSE CONTENT ─────────────────────────────────────────── -->
+<section class="section-alt py-6">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="fw-700 mb-2">What's in the knowledge base</h2>
+      <p class="text-muted">{{ course_name }} — {{ videos_count }} videos, HTML &amp; CSS fundamentals</p>
+    </div>
+    <div class="row g-3 justify-content-center">
+      {% for topic in [
+        ("HTML Basics","Installing VS Code, website structure, headings, paragraphs, links"),
+        ("HTML Elements","Images, lists, tables, inline & block, ID & classes, semantic tags"),
+        ("HTML Forms","Input types, form tags, validation attributes"),
+        ("HTML Media","Video, audio, media player exercise"),
+        ("CSS Fundamentals","Introduction to CSS, inline / internal / external"),
+        ("CSS Selectors","Universal, element, class, ID, attribute, pseudo-class selectors"),
+        ("CSS Box Model","Margin, padding, border, box-sizing"),
+        ("HTML Entities","Special characters, code tags, entities"),
+      ] %}
+      <div class="col-sm-6 col-md-4 col-lg-3">
+        <div class="topic-pill">
+          <span>{{ topic[0] }}</span>
+          <small class="d-block text-muted mt-1">{{ topic[1] }}</small>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="text-center mt-4">
+      <a href="/dashboard" class="btn btn-primary-custom px-5">
+        <i class="bi bi-play-circle-fill me-2"></i>Ask a question now
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CTA ────────────────────────────────────────────────────── -->
+<section class="cta-section py-6">
+  <div class="container text-center">
+    <h2 class="fw-700 text-white mb-3">Ready to learn smarter?</h2>
+    <p class="text-white-50 mb-4">Your AI tutor is waiting. Ask your first question now.</p>
+    <a href="/dashboard" class="btn btn-light btn-lg px-6 fw-600">
+      <i class="bi bi-mortarboard-fill me-2"></i>Open Learning Dashboard
+    </a>
+  </div>
+</section>
+
+<!-- ─── FOOTER ─────────────────────────────────────────────────── -->
+<footer class="footer py-4">
+  <div class="container text-center text-muted small">
+    <p class="mb-1">
+      <i class="bi bi-mortarboard-fill me-1"></i>
+      <strong>AI Teaching Assistant</strong> · Built with Python, Flask, {{ embed_model | upper }} &amp; {{ llm_model }}
+    </p>
+    <p class="mb-0">RAG-Based AI Teaching Assistant · FLARE Hackathon</p>
+  </div>
+</footer>
+{% endblock %}

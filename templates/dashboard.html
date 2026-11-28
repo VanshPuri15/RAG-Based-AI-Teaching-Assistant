@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — {{ course_name }}{% endblock %}
+
+{% block head %}
+<style>
+/* Dashboard-specific overrides */
+body { overflow-x: hidden; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+
+  <!-- ─── SIDEBAR ───────────────────────────────────────────────── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="/" class="sidebar-brand">
+        <div class="brand-icon sm"><i class="bi bi-mortarboard-fill"></i></div>
+        <span class="fw-700">LearnAI</span>
+      </a>
+      <button class="sidebar-toggle d-lg-none" id="sidebarClose">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Navigation</div>
+      <a href="#" class="sidebar-link active" data-panel="chat">
+        <i class="bi bi-chat-dots-fill"></i>AI Assistant
+      </a>
+      <a href="#" class="sidebar-link" data-panel="quiz">
+        <i class="bi bi-patch-question-fill"></i>Quiz Generator
+      </a>
+      <a href="#" class="sidebar-link" data-panel="history">
+        <i class="bi bi-clock-history"></i>History
+      </a>
+      <a href="#" class="sidebar-link" data-panel="about">
+        <i class="bi bi-info-circle-fill"></i>About
+      </a>
+
+      <div class="sidebar-section-label mt-4">Course Videos</div>
+      <div class="sidebar-videos">
+        {% for v in videos %}
+        <div class="sidebar-video-item">
+          <span class="vid-num">{{ v.number }}</span>
+          <span class="vid-title">{{ v.title }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-course-badge">
+        <i class="bi bi-collection-play-fill me-2"></i>
+        {{ course_name }}
+        <div class="mt-1 small text-muted">{{ videos|length }} videos · {{ "{:,}".format(total_chunks) }} chunks</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ─── MAIN CONTENT ──────────────────────────────────────────── -->
+  <main class="dashboard-main">
+
+    <!-- Mobile topbar -->
+    <div class="mobile-topbar d-lg-none">
+      <button class="btn btn-icon" id="sidebarOpen">
+        <i class="bi bi-list fs-4"></i>
+      </button>
+      <span class="fw-600">AI Teaching Assistant</span>
+      <div></div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         PANEL: CHAT
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="panel" id="panel-chat">
+      <div class="panel-header">
+        <div>
+          <h4 class="mb-0 fw-700"><i class="bi bi-chat-dots-fill me-2 text-accent"></i>AI Course Assistant</h4>
+          <small class="text-muted">Ask anything about the {{ course_name }}</small>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+          <span class="status-dot" id="ollamaStatus" title="Checking AI service..."></span>
+          <button class="btn btn-sm btn-outline-secondary" id="clearChatBtn" title="Clear chat">
+            <i class="bi bi-trash3"></i> Clear
+          </button>
+        </div>
+      </div>
+
+      <!-- Mode selector -->
+      <div class="mode-bar">
+        <span class="mode-label">Explanation style:</span>
+        <div class="mode-pills" id="modeSelector">
+          <button class="mode-pill active" data-mode="default">💬 Standard</button>
+          <button class="mode-pill" data-mode="simple">🐣 Beginner</button>
+          <button class="mode-pill" data-mode="step_by_step">📋 Step-by-step</button>
+          <button class="mode-pill" data-mode="summary">📝 Summary</button>
+          <button class="mode-pill" data-mode="example">💡 Example</button>
+        </div>
+      </div>
+
+      <!-- Chat messages -->
+      <div class="chat-messages" id="chatMessages">
+        <!-- Welcome message -->
+        <div class="chat-welcome">
+          <div class="welcome-icon"><i class="bi bi-mortarboard-fill"></i></div>
+          <h5 class="fw-600 mb-2">Hello! I'm your AI Course Assistant</h5>
+          <p class="text-muted mb-4">
+            I can answer questions about the <strong>{{ course_name }}</strong>.
+            I'll always tell you exactly which video and timestamp covers each topic.
+          </p>
+          <div class="suggested-qs">
+            <div class="suggested-label">Try asking:</div>
+            <div class="d-flex flex-wrap gap-2 justify-content-center">
+              {% for q in [
+                "What are semantic HTML tags?",
+                "How do CSS selectors work?",
+                "Explain the CSS box model",
+                "What is the difference between inline and block elements?",
+                "How do I create an HTML form?",
+              ] %}
+              <button class="suggested-btn" data-q="{{ q }}">{{ q }}</button>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat input -->
+      <div class="chat-input-area">
+        <div class="chat-input-wrapper">
+          <textarea
+            id="chatInput"
+            class="chat-textarea"
+            placeholder="Ask a question about the course..."
+            rows="1"
+            maxlength="1000"
+          ></textarea>
+          <button id="sendBtn" class="send-btn" title="Send">
+            <i class="bi bi-send-fill"></i>
+          </button>
+        </div>
+        <div class="input-footer-hint">
+          <i class="bi bi-info-circle me-1"></i>
+          Answers are grounded in real course transcripts. Press Enter or Shift+Enter for new line.
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         PANEL: QUIZ
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="panel d-none" id="panel-quiz">
+      <div class="panel-header">
+        <div>
+          <h4 class="mb-0 fw-700"><i class="bi bi-patch-question-fill me-2 text-accent-purple"></i>AI Quiz Generator</h4>
+          <small class="text-muted">Generate quizzes from real course content</small>
+        </div>
+      </div>
+
+      <!-- Quiz setup -->
+      <div id="quizSetup" class="quiz-setup-card">
+        <h5 class="fw-600 mb-3">Configure your quiz</h5>
+        <div class="mb-3">
+          <label class="form-label fw-500">Topic</label>
+          <input type="text" id="quizTopic" class="form-control form-control-custom"
+            placeholder="e.g. CSS selectors, HTML forms, semantic tags..." maxlength="100">
+          <div class="form-text">Enter a topic from the course — the AI retrieves relevant content automatically.</div>
+        </div>
+        <div class="mb-4">
+          <label class="form-label fw-500">Number of questions: <span id="numQLabel">5</span></label>
+          <input type="range" id="numQuestions" class="form-range" min="2" max="10" value="5">
+          <div class="d-flex justify-content-between small text-muted">
+            <span>2</span><span>5</span><span>10</span>
+          </div>
+        </div>
+
+        <!-- Topic suggestions -->
+        <div class="mb-4">
+          <div class="suggested-label mb-2">Quick topics:</div>
+          <div class="d-flex flex-wrap gap-2">
+            {% for t in ["HTML tags", "CSS selectors", "Box model", "HTML forms", "Semantic tags", "CSS specificity", "Block vs inline"] %}
+            <button class="topic-chip" data-topic="{{ t }}">{{ t }}</button>
+            {% endfor %}
+          </div>
+        </div>
+
+        <button id="generateQuizBtn" class="btn btn-primary-custom btn-lg w-100">
+          <i class="bi bi-stars me-2"></i>Generate Quiz
+        </button>
+        <div id="quizError" class="alert alert-warning mt-3 d-none"></div>
+      </div>
+
+      <!-- Quiz questions -->
+      <div id="quizQuestions" class="d-none">
+        <div class="quiz-progress-bar-wrap mb-4">
+          <div class="quiz-meta">
+            <span id="quizTopicDisplay" class="fw-600"></span>
+            <span id="quizProgress" class="text-muted small"></span>
+          </div>
+          <div class="progress mt-2" style="height:6px;">
+            <div id="quizProgressBar" class="progress-bar bg-accent" style="width:0%"></div>
+          </div>
+        </div>
+        <div id="questionsContainer"></div>
+        <div class="d-flex gap-3 mt-4">
+          <button id="submitQuizBtn" class="btn btn-primary-custom btn-lg flex-grow-1">
+            <i class="bi bi-check2-circle me-2"></i>Submit Quiz
+          </button>
+          <button id="newQuizBtn" class="btn btn-outline-secondary btn-lg">
+            <i class="bi bi-arrow-counterclockwise me-1"></i>New Quiz
+          </button>
+        </div>
+      </div>
+
+      <!-- Quiz results -->
+      <div id="quizResults" class="d-none">
+        <div class="quiz-score-card text-center mb-4">
+          <div class="score-circle" id="scoreCircle">
+            <span id="scoreDisplay"></span>
+          </div>
+          <h5 class="fw-700 mt-3" id="scoreMessage"></h5>
+          <p class="text-muted" id="scoreSub"></p>
+          <button id="tryAgainBtn" class="btn btn-primary-custom mt-2">
+            <i class="bi bi-arrow-repeat me-2"></i>Try Again
+          </button>
+        </div>
+        <div id="resultsDetail"></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         PANEL: HISTORY
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="panel d-none" id="panel-history">
+      <div class="panel-header">
+        <div>
+          <h4 class="mb-0 fw-700"><i class="bi bi-clock-history me-2 text-accent-teal"></i>Learning History</h4>
+          <small class="text-muted">Your session conversation</small>
+        </div>
+        <button class="btn btn-sm btn-outline-danger" id="clearHistoryBtn">
+          <i class="bi bi-trash3 me-1"></i>Clear
+        </button>
+      </div>
+      <div id="historyList" class="history-list"></div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         PANEL: ABOUT
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="panel d-none" id="panel-about">
+      <div class="panel-header">
+        <h4 class="mb-0 fw-700"><i class="bi bi-info-circle-fill me-2 text-accent-blue"></i>About</h4>
+      </div>
+      <div class="about-content">
+        <div class="about-hero mb-4">
+          <div class="brand-icon lg mx-auto mb-3"><i class="bi bi-mortarboard-fill"></i></div>
+          <h4 class="fw-700">AI Teaching Assistant</h4>
+          <p class="text-muted">RAG-Based AI Teaching Assistant · FLARE Hackathon</p>
+        </div>
+        <div class="row g-3">
+          {% set emb_label = "Local ONNX (FastEmbed)" if embedding_provider == "local" else ("Google Gemini API" if embedding_provider == "gemini" else "Local Ollama") %}
+          {% set llm_label = "Google Gemini API" if llm_provider == "gemini" else "Local Ollama" %}
+          {% set deployment_note = "Hybrid cloud-ready: local BGE retrieval + Gemini generation" if (embedding_provider == "local" and llm_provider == "gemini") else ("Cloud inference via Google Gemini API" if llm_provider == "gemini" else "All processing is local — Ollama runs on your machine") %}
+          {% for item in [
+            ("bi-cpu-fill","Embedding Model", embed_model ~ " via " ~ emb_label,"accent-blue"),
+            ("bi-chat-square-text-fill","Language Model", llm_model ~ " via " ~ llm_label,"accent-purple"),
+            ("bi-search","Retrieval","Cosine similarity, top-" ~ top_k ~ " chunks","accent-green"),
+            ("bi-collection-play-fill","Knowledge Base", (videos|length) ~ " videos, " ~ "{:,}".format(total_chunks) ~ " chunks","accent-orange"),
+            ("bi-server","Backend","Flask + Python","accent-teal"),
+            ("bi-shield-lock-fill","AI Provider", deployment_note,"accent-red"),
+          ] %}
+          <div class="col-sm-6">
+            <div class="about-card">
+              <i class="bi {{ item[0] }} text-{{ item[3] }} me-2"></i>
+              <div>
+                <div class="fw-600 small">{{ item[1] }}</div>
+                <div class="text-muted small">{{ item[2] }}</div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="about-pipeline mt-4">
+          <h6 class="fw-600 mb-3">RAG Pipeline</h6>
+          <div class="pipeline-mini">
+            {% for step in ["User Question", "BGE-M3 Embed", "Cosine Search", "Top-5 Chunks", "Llama 3.2", "Grounded Answer"] %}
+            <div class="pm-step">{{ step }}</div>
+            {% if not loop.last %}<div class="pm-arrow"><i class="bi bi-arrow-right"></i></div>{% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Sidebar overlay for mobile -->
+<div class="sidebar-overlay d-none" id="sidebarOverlay"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Pass Jinja data to JS
+  const COURSE_NAME = "{{ course_name }}";
+</script>
+{% endblock %}

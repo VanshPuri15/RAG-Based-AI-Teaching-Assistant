@@ -1,5 +1,6 @@
 __pycache__/
 *.pyc
+*.pyo
 venv/
 env/
 .env
@@ -11,3 +12,19 @@ unused/
 *.pt
 *.bin
 *.gguf
+
+# Large binary data files — use Git LFS or document how to regenerate
+# embeddings.joblib   # uncomment if you want to exclude from Git
+
+# Flask session / runtime artifacts
+prompt.txt
+response.txt
+output.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Gemini embedding artifacts (not used in hybrid deployment)
+embeddings_gemini.joblib
+embeddings_gemini.checkpoint.joblib
